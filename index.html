@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>كيف يعمل نظام التشغيل؟ — موشن جرافيك تفاعلي</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#050b1a;--bg2:#0a1428;--panel:#0d1a33;--line:rgba(56,189,248,.22);
+--cyan:#22d3ee;--blue:#38bdf8;--violet:#a78bfa;--green:#34d399;--amber:#fbbf24;--red:#f87171;
+--txt:#eef6ff;--muted:#9db4d0}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Tajawal',Tahoma,sans-serif;color:var(--txt);min-height:100vh;background:
+radial-gradient(1100px 500px at 85% -5%,rgba(34,211,238,.14),transparent 60%),
+radial-gradient(900px 500px at 5% 0%,rgba(167,139,250,.12),transparent 55%),var(--bg)}
+a{color:var(--cyan)}
+.topbar{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);background:rgba(5,11,26,.85);border-bottom:1px solid var(--line)}
+.topbar-in{max-width:1440px;margin:auto;padding:12px 20px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.logo{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;font-size:22px;background:linear-gradient(135deg,#0ea5e9,#6366f1);box-shadow:0 0 24px rgba(34,211,238,.45)}
+.topbar h1{font-size:19px;margin:0;font-weight:900}
+.topbar p{margin:2px 0 0;color:var(--muted);font-size:12.5px}
+.pill{margin-inline-start:auto;display:flex;gap:8px;flex-wrap:wrap}
+.pill span{font-size:12px;font-weight:700;padding:6px 12px;border:1px solid var(--line);border-radius:99px;background:rgba(56,189,248,.08)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);margin-inline-end:6px;box-shadow:0 0 8px var(--green)}
+.layout{max-width:1440px;margin:auto;padding:18px 20px 30px;display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:18px;align-items:start}
+@media(max-width:1080px){.layout{grid-template-columns:1fr}}
+.card{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:20px;overflow:hidden}
+.stage-head{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.chip{font-size:12px;font-weight:800;padding:5px 11px;border-radius:99px;background:rgba(34,211,238,.13);color:#7dd3fc;border:1px solid var(--line)}
+.chip.violet{background:rgba(167,139,250,.13);color:#c4b5fd}
+.stage{position:relative;aspect-ratio:16/9;background:#040816}
+.stage svg{width:100%;height:100%;display:block}
+.subtitle{position:absolute;right:4%;left:4%;bottom:14px;text-align:center;pointer-events:none}
+.subtitle span{display:inline-block;max-width:900px;background:rgba(2,6,17,.78);border:1px solid var(--line);
+padding:10px 18px;border-radius:14px;font-size:clamp(13px,1.6vw,19px);font-weight:700;line-height:1.9;backdrop-filter:blur(6px)}
+.subtitle small{display:block;color:#7dd3fc;font-size:11px;font-weight:800;letter-spacing:.4px;margin-bottom:2px}
+.big-title{position:absolute;inset:0;display:grid;place-items:center;text-align:center;pointer-events:none;padding:20px}
+.big-title h2{font-size:clamp(26px,4.4vw,54px);margin:0;font-weight:900;line-height:1.5;text-shadow:0 6px 40px rgba(34,211,238,.35)}
+.big-title p{color:#bae6fd;font-weight:700;font-size:clamp(13px,1.7vw,20px);margin:8px 0 0}
+.transport{display:flex;align-items:center;gap:10px;padding:14px 16px;border-top:1px solid var(--line);flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:#12264a;color:var(--txt);border-radius:12px;padding:9px 15px;
+font-family:inherit;font-weight:800;font-size:13.5px;cursor:pointer;transition:.2s}
+.btn:hover{border-color:var(--cyan);box-shadow:0 0 14px rgba(34,211,238,.25);transform:translateY(-1px)}
+.btn.primary{background:linear-gradient(135deg,#0284c7,#4f46e5);border:none;min-width:118px}
+.btn.warn{border-color:rgba(251,191,36,.5)}
+select.btn{appearance:none}
+.time{font-variant-numeric:tabular-nums;color:#bae6fd;font-weight:800;font-size:13px;min-width:104px;text-align:center}
+.scrub-wrap{flex:1;min-width:200px;position:relative;padding-top:2px}
+input[type=range]{width:100%;accent-color:var(--cyan);cursor:pointer}
+.markers{position:relative;height:14px}
+.markers i{position:absolute;top:0;width:2px;height:8px;background:rgba(125,211,252,.55);border-radius:2px}
+.markers em{position:absolute;top:8px;transform:translateX(50%);font-style:normal;font-size:9.5px;color:var(--muted)}
+.lab{padding:14px 16px;border-top:1px solid var(--line);display:grid;gap:10px}
+.lab h3,.side h3{margin:0;font-size:14.5px}
+.lab p{margin:0;color:var(--muted);font-size:12.5px;line-height:1.9}
+.lab .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.lab label.chk{display:flex;gap:7px;align-items:center;font-size:12.5px;font-weight:700;color:#cbd5e1;cursor:pointer}
+.lab audio{width:100%;height:36px}
+.file-btn{display:inline-block;cursor:pointer}
+.status{font-size:12px;font-weight:700;padding:8px 12px;border-radius:10px;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.35);color:#a7f3d0;line-height:1.8}
+.status.bad{background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.4);color:#fecaca}
+.side{padding:14px;position:sticky;top:76px}
+@media(max-width:1080px){.side{position:static}}
+.scenes{display:grid;gap:9px;margin-top:12px;max-height:640px;overflow:auto;padding-inline-end:2px}
+.scene-card{text-align:right;width:100%;font-family:inherit;color:var(--txt);cursor:pointer;display:flex;gap:11px;
+padding:11px 12px;border-radius:14px;border:1px solid var(--line);background:rgba(18,38,74,.55);transition:.2s}
+.scene-card:hover{border-color:var(--cyan)}
+.scene-card.active{border-color:var(--cyan);background:rgba(14,116,144,.28);box-shadow:0 0 18px rgba(34,211,238,.18)}
+.scene-card .num{flex:none;width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-weight:900;background:#12264a;color:#7dd3fc}
+.scene-card.active .num{background:linear-gradient(135deg,#0284c7,#4f46e5);color:#fff}
+.scene-card b{font-size:13.5px;display:block}
+.scene-card small{color:var(--muted);font-size:11.5px;line-height:1.7;display:block;margin-top:2px}
+.scene-card .t{color:#7dd3fc;font-weight:800;font-size:11px}
+.below{max-width:1440px;margin:0 auto;padding:0 20px 40px;display:grid;gap:18px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th,td{border-bottom:1px solid rgba(56,189,248,.14);padding:10px;text-align:right;vertical-align:top;line-height:1.8}
+th{color:#7dd3fc;font-size:12px}
+tr.hl td{background:rgba(14,116,144,.22)}
+.tbl-wrap{overflow:auto}
+.notes{padding:16px 20px}.notes li{color:#cbd5e1;line-height:2;font-size:13.5px}
+code{background:#0b1e3d;border:1px solid var(--line);padding:1px 7px;border-radius:7px;color:#7dd3fc;font-size:12px;direction:ltr;unicode-bidi:embed}
+.err{display:none;margin:14px 20px;padding:12px 16px;border-radius:12px;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.5);font-weight:700}
+footer{color:var(--muted);font-size:12px;text-align:center;padding:0 20px 26px;line-height:2}
+</style>
+</head>
+<body>
+<header class="topbar"><div class="topbar-in">
+<div class="logo">🖥️</div>
+<div><h1>كيف يعمل نظام التشغيل؟ — موشن جرافيك تعليمي</h1>
+<p>من لحظة الإقلاع… إلى خروج ورقة من الطابعة | GSAP + SVG | المدينة الرقمية وقائد حركة المرور</p></div>
+<div class="pill"><span><i class="dot"></i>مشغّل متزامن مع الصوت</span><span>المدة: <b id="totalPill">1:54</b></span><span>9 مشاهد</span></div>
+</div></header>
+<div class="err" id="gsapErr">⚠️ تعذّر تحميل مكتبة GSAP من CDN — تحقق من الاتصال بالإنترنت ثم حدّث الصفحة.</div>
+<div class="layout">
+<main class="card">
+<div class="stage-head"><b>🎬 مسرح الموشن جرافيك</b><span class="chip" id="sceneChip">المشهد 1 من 9</span>
+<span class="chip violet" id="sceneName">الافتتاحية</span><span class="chip" id="modeChip">الوضع: تشغيل زمني (بدون صوت)</span></div>
+<div class="stage">
+<svg id="stageSvg" viewBox="0 0 1280 720" role="img" aria-label="مسرح متحرك يشرح عمل نظام التشغيل">
+<defs>
+<radialGradient id="bgGrad" cx="50%" cy="38%" r="80%">
+<stop offset="0%" stop-color="#0b1e42"/><stop offset="55%" stop-color="#071230"/><stop offset="100%" stop-color="#03071a"/></radialGradient>
+<linearGradient id="hubGrad" x1="0" y1="0" x2="1" y2="1">
+<stop offset="0%" stop-color="#0ea5e9"/><stop offset="100%" stop-color="#6366f1"/></linearGradient>
+<linearGradient id="paperGrad" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#dbeafe"/></linearGradient>
+<filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+<feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<pattern id="grid" width="44" height="44" patternUnits="userSpaceOnUse">
+<path d="M44 0H0V44" fill="none" stroke="rgba(56,189,248,.07)" stroke-width="1"/></pattern>
+</defs>
+<rect width="1280" height="720" fill="url(#bgGrad)"/>
+<rect width="1280" height="720" fill="url(#grid)"/>
+<g id="city" opacity=".55">
+<rect x="30" y="520" width="70" height="150" rx="6" fill="#0a1832"/><rect x="115" y="480" width="56" height="190" rx="6" fill="#0a1832"/>
+<rect x="1080" y="490" width="64" height="180" rx="6" fill="#0a1832"/><rect x="1160" y="530" width="80" height="140" rx="6" fill="#0a1832"/>
+<rect x="480" y="60" width="60" height="90" rx="6" fill="#0a1832"/><rect x="760" y="55" width="52" height="80" rx="6" fill="#0a1832"/>
+<g fill="#fbbf24">
+<rect class="b-win" x="44" y="540" width="10" height="8"/><rect class="b-win" x="66" y="560" width="10" height="8"/>
+<rect class="b-win" x="128" y="505" width="9" height="8"/><rect class="b-win" x="1096" y="515" width="10" height="8"/>
+<rect class="b-win" x="1180" y="555" width="10" height="8"/><rect class="b-win" x="494" y="82" width="9" height="8"/>
+<rect class="b-win" x="774" y="76" width="9" height="8"/><rect class="b-win" x="44" y="590" width="10" height="8"/>
+</g></g>
+<g id="roads" fill="none" stroke-linecap="round">
+<path id="road-ram" d="M640 360 C 520 250, 380 190, 252 148" stroke="#164e63" stroke-width="17"/>
+<path id="road-ssd" d="M640 360 C 480 355, 330 358, 268 360" stroke="#164e63" stroke-width="17"/>
+<path id="road-cpu" d="M640 360 C 770 250, 900 185, 1018 148" stroke="#164e63" stroke-width="17"/>
+<path id="road-gpu" d="M640 360 C 800 358, 940 360, 1006 360" stroke="#164e63" stroke-width="17"/>
+<path id="road-printer" d="M640 360 C 790 460, 900 540, 982 578" stroke="#164e63" stroke-width="17"/>
+<path id="road-user" d="M640 360 C 500 470, 390 545, 292 580" stroke="#164e63" stroke-width="17"/>
+<g stroke="#38bdf8" stroke-width="2.4" stroke-dasharray="12 14" opacity=".55">
+<path d="M640 360 C 520 250, 380 190, 252 148" fill="none"/><path d="M640 360 C 480 355, 330 358, 268 360" fill="none"/>
+<path d="M640 360 C 770 250, 900 185, 1018 148" fill="none"/><path d="M640 360 C 800 358, 940 360, 1006 360" fill="none"/>
+<path d="M640 360 C 790 460, 900 540, 982 578" fill="none"/><path d="M640 360 C 500 470, 390 545, 292 580" fill="none"/></g></g>
+<g class="hw" id="hw-ram">
+<g transform="translate(250,140)">
+<rect x="-100" y="-66" width="200" height="132" rx="18" fill="#0d2147" stroke="#22d3ee" stroke-width="2"/>
+<rect x="-100" y="-66" width="200" height="34" rx="17" fill="#12305f"/>
+<text y="-40" text-anchor="middle" fill="#e0f2fe" font-size="16" font-weight="800">الذاكرة RAM</text>
+<g fill="#22d3ee" opacity=".85"><rect x="-78" y="-20" width="14" height="34" rx="3"/><rect x="-52" y="-20" width="14" height="34" rx="3"/><rect x="-26" y="-20" width="14" height="34" rx="3"/><rect x="0" y="-20" width="14" height="34" rx="3"/><rect x="26" y="-20" width="14" height="34" rx="3"/><rect x="52" y="-20" width="14" height="34" rx="3"/></g>
+<g id="ramSlots">
+<rect class="ram-fill" x="-82" y="26" width="24" height="17" rx="4" fill="#f472b6"/><rect class="ram-fill" x="-52" y="26" width="24" height="17" rx="4" fill="#38bdf8"/>
+<rect class="ram-fill" x="-22" y="26" width="24" height="17" rx="4" fill="#34d399"/><rect class="ram-fill" x="8" y="26" width="24" height="17" rx="4" fill="#fbbf24"/>
+<rect class="ram-fill" x="38" y="26" width="24" height="17" rx="4" fill="#a78bfa"/><rect class="ram-fill" x="68" y="26" width="24" height="17" rx="4" fill="#f87171"/>
+</g>
+<text x="0" y="60" text-anchor="middle" fill="#9db4d0" font-size="11">المستودع السريع المؤقت</text>
+</g><text id="ramWarn" x="250" y="228" text-anchor="middle" fill="#f87171" font-size="14" font-weight="800" opacity="0">⚠ الذاكرة ممتلئة!</text></g>
+<g class="hw" id="hw-ssd">
+<g transform="translate(168,360)">
+<rect x="-98" y="-62" width="196" height="124" rx="18" fill="#0d2147" stroke="#a78bfa" stroke-width="2"/>
+<rect x="-98" y="-62" width="196" height="34" rx="17" fill="#241d4d"/>
+<text y="-36" text-anchor="middle" fill="#ede9fe" font-size="16" font-weight="800">التخزين SSD</text>
+<g id="fileGrid" stroke="none">
+<rect class="file-cell" x="-80" y="-16" width="34" height="26" rx="5" fill="#fbbf24"/><rect class="file-cell" x="-38" y="-16" width="34" height="26" rx="5" fill="#38bdf8"/>
+<rect class="file-cell" x="4" y="-16" width="34" height="26" rx="5" fill="#34d399"/><rect class="file-cell" x="46" y="-16" width="34" height="26" rx="5" fill="#f472b6"/>
+<rect class="file-cell" x="-80" y="18" width="34" height="26" rx="5" fill="#a78bfa"/><rect class="file-cell" x="-38" y="18" width="34" height="26" rx="5" fill="#f87171"/>
+<rect class="file-cell" x="4" y="18" width="34" height="26" rx="5" fill="#22d3ee"/><rect class="file-cell" x="46" y="18" width="34" height="26" rx="5" fill="#fbbf24"/>
+</g></g></g>
+<g class="hw" id="hw-cpu">
+<g transform="translate(1032,140)">
+<rect x="-102" y="-68" width="204" height="136" rx="18" fill="#0d2147" stroke="#38bdf8" stroke-width="2"/>
+<rect x="-102" y="-68" width="204" height="34" rx="17" fill="#12305f"/>
+<text y="-42" text-anchor="middle" fill="#e0f2fe" font-size="16" font-weight="800">المعالج CPU</text>
+<g stroke="#38bdf8" stroke-width="3"><path d="M-70 -20v-18M-35 -20v-18M0 -20v-18M35 -20v-18M70 -20v-18M-70 44v14M-35 44v14M0 44v14M35 44v14M70 44v14"/></g>
+<rect x="-42" y="-22" width="84" height="66" rx="10" fill="#0ea5e9" opacity=".28" stroke="#7dd3fc"/>
+<circle id="cpuRingBg" cx="0" cy="11" r="19" fill="none" stroke="#1e3a5f" stroke-width="6"/>
+<circle id="cpuRing" cx="0" cy="11" r="19" fill="none" stroke="#34d399" stroke-width="6" stroke-linecap="round" transform="rotate(-90)" stroke-dasharray="119.4" stroke-dashoffset="119.4"/>
+<text y="16" text-anchor="middle" fill="#fff" font-size="12" font-weight="900">CPU</text>
+<text x="0" y="60" text-anchor="middle" fill="#9db4d0" font-size="11">مصنع تنفيذ المهام</text>
+</g></g>
+<g class="hw" id="hw-gpu">
+<g transform="translate(1112,360)">
+<rect x="-106" y="-64" width="212" height="128" rx="18" fill="#0d2147" stroke="#f472b6" stroke-width="2"/>
+<rect x="-106" y="-64" width="212" height="34" rx="17" fill="#3d1740"/>
+<text y="-38" text-anchor="middle" fill="#fdf2f8" font-size="16" font-weight="800">كارت الشاشة GPU</text>
+<circle cx="-52" cy="14" r="24" fill="none" stroke="#f472b6" stroke-width="3"/>
+<path d="M-52 -8v44M-74 14h44M-68 -2l32 32M-36 -2l-32 32" stroke="#f472b6" stroke-width="3"/>
+<rect id="gpuScreen" x="-8" y="-14" width="96" height="58" rx="8" fill="#082f3a" stroke="#22d3ee"/>
+<g id="gpuChart" opacity="0"><rect x="2" y="18" width="13" height="18" fill="#22d3ee"/><rect x="20" y="8" width="13" height="28" fill="#34d399"/><rect x="38" y="14" width="13" height="22" fill="#fbbf24"/><rect x="56" y="0" width="13" height="36" fill="#f472b6"/></g>
+</g></g>
+<g id="driverNode" transform="translate(872,360)">
+<polygon points="0,-34 30,-17 30,17 0,34 -30,17 -30,-17" fill="#312e81" stroke="#a78bfa" stroke-width="2"/>
+<text y="-2" text-anchor="middle" fill="#ede9fe" font-size="11" font-weight="900">Driver</text>
+<text y="13" text-anchor="middle" fill="#c4b5fd" font-size="9.5">مترجم</text>
+<circle id="drvMsg" r="8" fill="#fbbf24" filter="url(#glow)" opacity="0"/></g>
+<g class="hw" id="hw-printer">
+<g transform="translate(992,592)">
+<rect x="-108" y="-58" width="216" height="116" rx="18" fill="#0d2147" stroke="#34d399" stroke-width="2"/>
+<text y="-34" text-anchor="middle" fill="#ecfdf5" font-size="16" font-weight="800">الطابعة 🖨</text>
+<rect x="-62" y="-24" width="124" height="30" rx="7" fill="#164e3f" stroke="#34d399"/>
+<g id="printPaper"><rect x="-52" y="2" width="104" height="48" rx="5" fill="url(#paperGrad)"/>
+<g stroke="#334155" stroke-width="4" stroke-linecap="round">
+<line class="paper-line" x1="-38" y1="16" x2="38" y2="16"/><line class="paper-line" x1="-38" y1="27" x2="30" y2="27"/><line class="paper-line" x1="-38" y1="38" x2="36" y2="38"/></g></g>
+<g id="spooler" transform="translate(0,58)">
+<circle class="spool-dot" cx="-30" cy="0" r="6" fill="#fbbf24"/><circle class="spool-dot" cx="-8" cy="0" r="6" fill="#38bdf8"/><circle class="spool-dot" cx="14" cy="0" r="6" fill="#f472b6"/>
+<text id="spoolCount" x="42" y="4" fill="#a7f3d0" font-size="11" font-weight="800">طابور: 0</text></g>
+</g><g id="printDone" transform="translate(992,512)" opacity="0">
+<rect x="-72" y="-19" width="144" height="38" rx="19" fill="#065f46" stroke="#34d399"/>
+<text y="6" text-anchor="middle" fill="#d1fae5" font-size="14" font-weight="900">✓ تمت الطباعة</text></g></g>
+<g class="hw" id="hw-user">
+<g transform="translate(268,592)">
+<rect x="-112" y="-60" width="224" height="120" rx="18" fill="#0d2147" stroke="#fbbf24" stroke-width="2"/>
+<text y="-36" text-anchor="middle" fill="#fffbeb" font-size="16" font-weight="800">المستخدم والتطبيقات</text>
+<rect x="-88" y="-22" width="104" height="62" rx="8" fill="#081c38" stroke="#38bdf8"/>
+<rect x="-78" y="-12" width="38" height="27" rx="4" fill="#f472b6" opacity=".8"/><rect x="-34" y="-12" width="38" height="27" rx="4" fill="#38bdf8" opacity=".8"/>
+<rect x="-78" y="21" width="84" height="9" rx="4" fill="#1e3a5f"/>
+<circle cx="52" cy="-2" r="19" fill="#fde68a"/><path d="M30 40c4-20 40-20 44 0z" fill="#0ea5e9"/>
+<g id="printBtn"><rect x="22" y="24" width="76" height="26" rx="13" fill="#065f46" stroke="#34d399"/>
+<text x="60" y="41" text-anchor="middle" fill="#d1fae5" font-size="12.5" font-weight="900">🖨 طباعة</text>
+<circle id="clickRipple" cx="60" cy="37" r="6" fill="none" stroke="#34d399" stroke-width="3" opacity="0"/></g>
+</g></g>
+<g id="trafficLight" transform="translate(792,452)">
+<rect x="-17" y="-58" width="34" height="102" rx="15" fill="#0b1c3a" stroke="#334155" stroke-width="2"/>
+<circle id="tlRed" cx="0" cy="-36" r="11" fill="#f87171" opacity=".22"/><circle id="tlYellow" cx="0" cy="-7" r="11" fill="#fbbf24" opacity=".22"/><circle id="tlGreen" cx="0" cy="22" r="11" fill="#34d399" opacity=".22"/>
+<rect x="-4" y="44" width="8" height="42" fill="#334155"/>
+<text y="106" text-anchor="middle" fill="#9db4d0" font-size="10.5" font-weight="700">إشارة المرور</text></g>
+<g id="osCore" transform="translate(640,360)">
+<circle id="hubRing2" r="104" fill="none" stroke="rgba(34,211,238,.3)" stroke-width="2" stroke-dasharray="7 9"/>
+<circle id="hubRing" r="86" fill="none" stroke="rgba(34,211,238,.55)" stroke-width="2.5"/>
+<circle r="74" fill="url(#hubGrad)" opacity=".96"/>
+<circle r="74" fill="none" stroke="#bae6fd" stroke-width="1.6" opacity=".7"/>
+<circle cx="0" cy="-26" r="17" fill="#fde68a"/>
+<path d="M-18 -36a18 13 0 0 1 36 0l0 4-36 0z" fill="#082f49" stroke="#38bdf8" stroke-width="1.6"/>
+<rect x="-18" y="-33" width="36" height="6" rx="3" fill="#38bdf8"/>
+<path d="M-21 22c2-24 40-24 42 0l3 20-48 0z" fill="#082f49" stroke="#38bdf8" stroke-width="1.6"/>
+<rect x="-3" y="-6" width="6" height="30" fill="#fbbf24"/>
+<g id="officerArm"><rect x="14" y="-12" width="34" height="9" rx="4.5" fill="#fde68a" transform="rotate(-18 14 -12)"/>
+<circle cx="50" cy="-22" r="11" fill="#f87171" stroke="#fff" stroke-width="2.4"/></g>
+<text y="58" text-anchor="middle" fill="#fff" font-size="15.5" font-weight="900">نظام التشغيل</text>
+<text y="118" text-anchor="middle" fill="#7dd3fc" font-size="12" font-weight="800">قائد حركة المرور • OS Core</text></g>
+<g id="bootPanel" opacity="0"><g transform="translate(430,96)">
+<rect width="330" height="178" rx="16" fill="rgba(4,10,26,.92)" stroke="#38bdf8" stroke-width="1.6"/>
+<text x="165" y="32" text-anchor="middle" fill="#bae6fd" font-size="15" font-weight="900">فحص الإقلاع POST — BIOS / UEFI</text>
+<g font-size="14.5" font-weight="700" fill="#dbeafe">
+<g class="chk-row"><circle cx="34" cy="62" r="10" fill="none" stroke="#34d399" stroke-width="2"/><path class="chk" d="M28 62l5 5 8-10" fill="none" stroke="#34d399" stroke-width="2.6" stroke-linecap="round"/><text x="56" y="67">المعالج CPU</text></g>
+<g class="chk-row"><circle cx="34" cy="100" r="10" fill="none" stroke="#34d399" stroke-width="2"/><path class="chk" d="M28 100l5 5 8-10" fill="none" stroke="#34d399" stroke-width="2.6" stroke-linecap="round"/><text x="56" y="105">الذاكرة RAM</text></g>
+<g class="chk-row"><circle cx="34" cy="138" r="10" fill="none" stroke="#34d399" stroke-width="2"/><path class="chk" d="M28 138l5 5 8-10" fill="none" stroke="#34d399" stroke-width="2.6" stroke-linecap="round"/><text x="56" y="143">التخزين والأجهزة الطرفية</text></g>
+</g></g></g>
+<g id="kernelBar" opacity="0"><g transform="translate(490,498)">
+<rect width="300" height="42" rx="21" fill="rgba(4,10,26,.92)" stroke="#22d3ee"/>
+<rect id="kernelFill" x="5" y="5" width="0" height="32" rx="16" fill="#22d3ee"/>
+<text x="150" y="27" text-anchor="middle" fill="#e0f2fe" font-size="13" font-weight="900">تحميل النواة Kernel إلى الذاكرة…</text></g></g>
+<g id="queue" font-size="12.5" font-weight="900" text-anchor="middle">
+<g class="proc-chip"><rect x="-24" y="-15" width="48" height="30" rx="9" fill="#be185d"/><text y="5" fill="#fff">P1 متصفح</text></g>
+<g class="proc-chip"><rect x="-24" y="-15" width="48" height="30" rx="9" fill="#0369a1"/><text y="5" fill="#fff">P2 محرر</text></g>
+<g class="proc-chip"><rect x="-24" y="-15" width="48" height="30" rx="9" fill="#047857"/><text y="5" fill="#fff">P3 موسيقى</text></g>
+<g class="proc-chip"><rect x="-24" y="-15" width="48" height="30" rx="9" fill="#b45309"/><text y="5" fill="#fff">P4 لعبة</text></g></g>
+<g id="docFly" opacity="0"><rect x="-21" y="-27" width="42" height="54" rx="6" fill="url(#paperGrad)" stroke="#38bdf8" stroke-width="1.6"/>
+<g stroke="#334155" stroke-width="3.4" stroke-linecap="round"><line x1="-11" y1="-11" x2="11" y2="-11"/><line x1="-11" y1="0" x2="8" y2="0"/><line x1="-11" y1="11" x2="11" y2="11"/></g>
+<text y="-34" text-anchor="middle" fill="#bae6fd" font-size="11" font-weight="800">مستند.pdf</text></g>
+<g id="packets"></g>
+<rect id="darkVeil" width="1280" height="720" fill="#01040d" opacity=".93"/>
+<g id="powerBtn" transform="translate(640,352)">
+<circle id="powerRing" r="57" fill="rgba(8,47,73,.9)" stroke="#22d3ee" stroke-width="3"/>
+<path d="M640 316v30M622 330a27 27 0 1 0 36 0" transform="translate(-640,-352)" fill="none" stroke="#e0f2fe" stroke-width="6" stroke-linecap="round"/>
+<text y="86" text-anchor="middle" fill="#bae6fd" font-size="14" font-weight="800">اضغط زر التشغيل…</text></g>
+<g id="callout" opacity="0"><rect x="-130" y="-26" width="260" height="52" rx="26" fill="rgba(2,8,23,.88)" stroke="#22d3ee" stroke-width="1.6"/>
+<text id="calloutText" text-anchor="middle" y="6" fill="#e0f2fe" font-size="14.5" font-weight="800">…</text></g>
+
+
+
+</svg>
+<div class="big-title" id="bigTitle"><div><h2>كيف يعمل نظام التشغيل؟</h2><p>من زرّ التشغيل… إلى ورقة تخرج من الطابعة 🖨️</p></div></div>
+<div class="subtitle"><span><small id="subScene">المشهد 1 — الافتتاحية</small><b id="subText"></b></span></div>
+</div>
+<div class="transport">
+<button class="btn primary" id="playBtn">▶ تشغيل</button>
+<button class="btn" id="restartBtn" title="إعادة من البداية">↺ إعادة</button>
+<button class="btn" id="prevBtn" title="المشهد السابق">⏮ السابق</button>
+<button class="btn" id="nextBtn" title="المشهد التالي">التالي ⏭</button>
+<div class="scrub-wrap"><input type="range" id="scrub" min="0" max="114" step="0.05" value="0" aria-label="شريط التقدم"><div class="markers" id="markers"></div></div>
+<div class="time"><span id="tNow">0:00</span> / <span id="tTotal">1:54</span></div>
+<select class="btn" id="speed" title="سرعة التشغيل"><option value="0.5">0.5×</option><option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option><option value="2">2×</option></select>
+</div>
+<div class="lab">
+<h3>🔊 مختبر الصوت والمزامنة</h3>
+<p>ملفك على Google Drive لا يمكن تضمينه مباشرة دائمًا (قيود Drive على البثّ). جرّب زر التشغيل من Drive، أو ارفع ملف الصوت من جهازك للمزامنة الدقيقة. بدون أي صوت، يعمل خط GSAP الزمني منفردًا مع التعليقات النصية، ويمكنك تفعيل النطق الآلي العربي.</p>
+<div class="row">
+<a class="btn" href="https://drive.google.com/file/d/1CUJUwfFRXAkVEwi-LQWM04lvAfAiufSv/view?usp=sharing" target="_blank" rel="noopener">↗ فتح الملف على Drive</a>
+<button class="btn warn" id="driveTry">▶ محاولة التشغيل من Drive</button>
+<label class="btn file-btn">⬆ رفع ملف الصوت من جهازي<input type="file" id="audioFile" accept="audio/*" hidden></label>
+<label class="chk"><input type="checkbox" id="autoFit" checked> مزامنة تلقائية: مطّ/ضغط الحركة على مدة الصوت</label>
+<label class="chk"><input type="checkbox" id="ttsMode"> 🗣 نطق آلي عربي للنصوص (بدون ملف صوت)</label>
+</div>
+<audio id="voAudio" controls preload="metadata"></audio>
+<div class="status" id="audioStatus">الحالة: وضع التشغيل الزمني الصامت — اضغط «تشغيل» لبدء العرض مع التعليقات النصية.</div>
+</div>
+
+</main>
+<aside class="card side"><h3>🗂 لوحة القصة — المشاهد (اضغط للانتقال)</h3>
+<div class="scenes" id="sceneList"></div>
+<p style="color:var(--muted);font-size:12px;line-height:1.9;margin:12px 0 0">💡 النصوص الحالية مُعاد بناؤها تعليميًا بنفس محور تسجيلك (تعذّر فتح Drive من بيئة العمل). أرسل النص المفرّغ أو التوقيتات وسأطابقها حرفيًا — أو عدّل مصفوفة <code>SCENES</code> في الكود مباشرة.</p></aside>
+
+</div>
+<div class="below">
+<section class="card"><div class="stage-head"><b>⏱ جدول المزامنة الكامل (Storyboard + الصوت + الحركة)</b></div>
+<div class="tbl-wrap"><table><thead><tr><th>#</th><th>التوقيت</th><th>المشهد</th><th>النص الصوتي المتزامن</th><th>الوصف البصري</th><th>نوع الحركة (GSAP)</th></tr></thead><tbody id="syncBody"></tbody></table></div></section>
+<section class="card notes"><h3 style="margin-top:0">🎬 ملاحظات المخرج — كيف تجسّد المفاهيم بصريًا؟</h3><ul>
+<li><b>استعارة المدينة والمرور:</b> المسارات بين المكوّنات «شوارع»، وحزم البيانات «سيارات» تتحرك بـ MotionPath وتتوقف عند إشارة حمراء يديرها ضابط المرور (نظام التشغيل) في برج التحكّم المركزي.</li>
+<li><b>المعالج:</b> طابور عمليات P1–P4 يتناوب على «شرائح زمنية» تراها كحلقة تقدّم داخل شريحة CPU، ثم يتسارع الإيقاع لتشعر أن كل التطبيقات تعمل معًا.</li>
+<li><b>الذاكرة:</b> خانات RAM ملونة تُحجز وتُحرّر أمامك، وعند الامتلاء يومض تحذير أحمر قبل أن يتدخل النظام — تجسيد مباشر لفكرة التخصيص والتحرير.</li>
+<li><b>التعريفات (Drivers):</b> عقدة سداسية بنفسجية «مترجم» بين نظام التشغيل وكارت الشاشة/الطابعة: الرسالة تصل إليها بلون وتغادر بلون آخر = تحويل الأوامر للغة العتاد.</li>
+<li><b>الطباعة (المثال الختامي الكامل):</b> نقرة زر «طباعة» ← مستند يطير للبرج ← رقم في طابور الانتظار (Spooler) ← عبور جسر التعريف ← ورقة تخرج وتُكتب سطورها ثم «✓ تمت الطباعة».</li>
+<li><b>للمطابقة الدقيقة مع تسجيلك:</b> افتح الكود وابحث عن <code>SCENES</code> — غيّر <code>vo</code> (النص) و<code>dur</code> (مدة كل مشهد بالثواني)، وسيعيد المشغّل بناء الخط الزمني والجدول ولوحة المشاهد تلقائيًا.</li>
+</ul></section>
+</div>
+<footer>صُنع بـ HTML + SVG + GSAP (Timeline + MotionPath) في ملف واحد — ملف مرافق: <b>STORYBOARD.md</b> فيه لوحة القصة كاملة بصيغة نصية.<br>رابط الصوت الأصلي: drive.google.com/file/d/1CUJUwfFRXAkVEwi-LQWM04lvAfAiufSv</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/MotionPathPlugin.min.js"></script>
+<script>
+"use strict";
+/* ============ بيانات المشاهد: عدّل vo و dur هنا للمطابقة الحرفية مع تسجيلك ============ */
+const SCENES=[
+{id:1,title:"الافتتاحية: سؤال يفتح المدينة",dur:10,callout:"ما الذي يحدث داخل جهازك؟",
+vo:"ماذا يحدث فعلًا داخل جهازك، منذ لحظة الضغط على زر التشغيل… وحتى تخرج ورقة من الطابعة؟ في المنتصف يقف بطل خفيّ اسمه: نظام التشغيل.",
+visual:"ظلام، زر طاقة يتوهج، مدينة رقمية تُضاء حيًّا حيًّا، ثم عنوان الفيديو.",
+motion:"Fade + Glow pulse + إضاءة Stagger + عنوان يرتفع"},
+{id:2,title:"لحظة الإقلاع: BIOS / UEFI",dur:12,callout:"فحص سريع: هل كل القطع سليمة؟",
+vo:"عند الضغط على زر التشغيل، تستيقظ اللوحة الأم، ويبدأ برنامج صغير مخزّن عليها يُدعى BIOS أو UEFI: يفحص المعالج والذاكرة وبقية القطع، ويتأكد أن كل شيء سليم وجاهز.",
+visual:"موجة كهربائية من زر الطاقة، ولوحة فحص POST تُعلّم: المعالج ✓ الذاكرة ✓ التخزين ✓.",
+motion:"Expanding ring + Pop متتابع + رسم علامات ✓"},
+{id:3,title:"تحميل النواة: ميلاد نظام التشغيل",dur:12,callout:"النواة تنتقل إلى الذاكرة…",
+vo:"بعد نجاح الفحص، يبحث الـ BIOS عن نظام التشغيل في وحدة التخزين، فينقل نواته إلى الذاكرة… وهنا يستلم نظام التشغيل القيادة رسميًا.",
+visual:"حزم النواة تسافر من SSD إلى RAM، شريط تحميل يمتلئ، وبرج التحكم المركزي يشتعل.",
+motion:"MotionPath (SSD←RAM) + شريط تقدّم + هالة نابضة"},
+{id:4,title:"قائد حركة المرور",dur:14,callout:"لا تصادم… لا فوضى… الكل يصل",
+vo:"تخيّل نظام التشغيل قائدًا لحركة المرور في مدينة مزدحمة لا تهدأ: التطبيقات سيارات، والبيانات ركّاب، وموارد الجهاز شوارع ومبانٍ… ومهمته أن يصل الجميع دون تصادم أو فوضى.",
+visual:"تقاطع مروري كامل: ضابط في المنتصف، إشارة تعمل، وسيارات بيانات تعبر بالتناوب.",
+motion:"إشارة مرور + ذراع دوّارة + سيارات على مسارات منحنية"},
+{id:5,title:"إدارة المعالج: من يمرّ أولًا؟",dur:14,callout:"شرائح زمنية خاطفة للجميع",
+vo:"المعالج سريع جدًا، لكنه ينفّذ مهمة واحدة في اللحظة الواحدة لكل نواة. لذلك يقطّع نظام التشغيل الوقت إلى شرائح صغيرة، ويمرّر التطبيقات واحدًا تلو الآخر بسرعة خاطفة… فيبدو لك أنها تعمل كلها في وقت واحد.",
+visual:"طابور عمليات P1–P4 يتناوب على بوابة CPU، وحلقة زمنية تُرسم لكل شريحة.",
+motion:"طابور Step-by-step + حلقة تقدّم + تسارع جماعي"},
+{id:6,title:"إدارة الذاكرة: المستودع السريع",dur:14,callout:"رفّ خاص لكل تطبيق…",
+vo:"أما الذاكرة العشوائية فهي مستودع المدينة السريع: يخصّص نظام التشغيل لكل تطبيق رفًّا خاصًا لا يقترب منه غيره، وعند إغلاق التطبيق يحرّر الرف فورًا لتطبيق آخر… ولو امتلأت الذاكرة، بدأ التباطؤ.",
+visual:"خانات RAM تمتلئ بكتل ملونة، كتلة تُحرّر عند الإغلاق، ثم وميض امتلاء أحمر.",
+motion:"Slide/Snap للكتل + تحرير Shrink + اهتزاز تحذيري"},
+{id:7,title:"التخزين والتعريفات: المخزن والمترجمون",dur:12,callout:"الـ Driver: مترجم النظام والعتاد",
+vo:"وفي المخزن الكبير — وحدة التخزين — ينظّم نظام التشغيل ملفاتك في مجلدات يسهل الوصول إليها. ولا يتحدث مع العتاد مباشرة، بل عبر مترجمين صغار اسمهم التعريفات أو Drivers: يوصّلون أوامره إلى كارت الشاشة والطابعة وكل قطعة بلغة تفهمها.",
+visual:"ملفات تُرتّب في شبكة داخل SSD، ورسالة تعبر مترجم Driver إلى GPU فتُضاء شاشته.",
+motion:"Stagger للملفات + رسالة تتبدل لونًا + شاشة تُضاء"},
+{id:8,title:"أمر طباعة: من النقرة إلى الورقة",dur:16,callout:"طلبك في الطابور… دورك الآن!",
+vo:"والآن مثال كامل: تضغط زر طباعة… يستلم نظام التشغيل طلبك، يجهّز المستند، ويرسله إلى طابور انتظار الطباعة، ثم يسلّمه عبر التعريف إلى الطابعة… فتخرج ورقتك. كل ذلك في ثوانٍ، وبتنسيق كامل خلف الكواليس.",
+visual:"نقرة طباعة، مستند يطير للبرج، رقم في طابور Spooler، ثم ورقة تخرج مكتوبة: ✓.",
+motion:"MotionPath متسلسل + عدّاد طابور + ورقة تنزلق وتُكتب"},
+{id:9,title:"الخاتمة: البطل الخفي",dur:10,callout:"مدير… قائد… ومترجم — كل ثانية",
+vo:"إذن، نظام التشغيل ليس مجرد شاشة وأيقونات… بل هو المدير والقائد والمترجم الذي يدير موارد جهازك كل ثانية، من لحظة الإقلاع وحتى آخر أمر تنفّذه.",
+visual:"المدينة كاملة تعمل بتناغم، والضابط في القلب ينبض بهدوء، ثم شعار ختامي.",
+motion:"Zoom-out للكاميرا + نبض جماعي + تلاشي الشعار"}];
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const fmt=t=>{t=Math.max(0,Math.round(t));return Math.floor(t/60)+":"+String(t%60).padStart(2,"0")};
+let acc=0; SCENES.forEach(s=>{s.start=acc; acc+=s.dur}); const TOTAL=acc;
+$("#tTotal").textContent=fmt(TOTAL); $("#totalPill").textContent=fmt(TOTAL);
+$("#scrub").max=TOTAL;
+/* بناء لوحة المشاهد + الجدول + علامات الشريط */
+const listEl=$("#sceneList"), bodyEl=$("#syncBody"), markEl=$("#markers");
+SCENES.forEach((s,i)=>{
+  const b=document.createElement("button"); b.className="scene-card"; b.dataset.i=i;
+  b.innerHTML=`<span class="num">${s.id}</span><span><b>${s.title}</b><small>${s.visual}</small><span class="t">⏱ ${fmt(s.start)} – ${fmt(s.start+s.dur)} • ${s.dur} ث</span></span>`;
+  b.onclick=()=>{seekScene(i); playAll()};
+  listEl.appendChild(b);
+  const tr=document.createElement("tr"); tr.id="row"+i;
+  tr.innerHTML=`<td>${s.id}</td><td>${fmt(s.start)} – ${fmt(s.start+s.dur)}</td><td><b>${s.title}</b></td><td>${s.vo}</td><td>${s.visual}</td><td>${s.motion}</td>`;
+  bodyEl.appendChild(tr);
+  const m=document.createElement("i"); m.style.insetInlineStart=(s.start/TOTAL*100)+"%"; markEl.appendChild(m);
+  const em=document.createElement("em"); em.style.insetInlineStart=(s.start/TOTAL*100)+"%"; em.textContent=s.id; markEl.appendChild(em);
+});
+if(!window.gsap){$("#gsapErr").style.display="block"; throw new Error("GSAP missing")}
+if(window.MotionPathPlugin) gsap.registerPlugin(MotionPathPlugin);
+const SVGNS="http://www.w3.org/2000/svg", packetsEl=$("#packets");
+function packet(color,r=7){
+  const c=document.createElementNS(SVGNS,"circle");
+  c.setAttribute("r",r); c.setAttribute("fill",color); c.setAttribute("filter","url(#glow)"); c.setAttribute("opacity","0");
+  packetsEl.appendChild(c); return c;
+}
+function flow(tl,path,color,n,dur,at,fromP=0,toP=1){
+  for(let k=0;k<n;k++){
+    const c=packet(color);
+    if(window.MotionPathPlugin){
+      tl.fromTo(c,{opacity:0},{opacity:1,duration:.25},at+k*(dur/n))
+        .to(c,{motionPath:{path:path,start:fromP,end:toP,align:path,alignOrigin:[.5,.5]},duration:dur,ease:"power1.inOut"},at+k*(dur/n))
+        .to(c,{opacity:0,duration:.3},at+k*(dur/n)+dur-.3);
+    }else{
+      tl.fromTo(c,{opacity:0,x:640,y:360},{opacity:1,duration:.25},at+k*(dur/n))
+        .to(c,{x:300,y:200,duration:dur,ease:"power1.inOut"},at+k*(dur/n))
+        .to(c,{opacity:0,duration:.3},at+k*(dur/n)+dur-.3);
+    }
+  }
+}
+function callout(tl,x,y,text,at,dur){
+  tl.call(()=>{$("#calloutText").textContent=text; gsap.set("#callout",{x:x,y:y})},null,at)
+    .fromTo("#callout",{opacity:0,scale:.8,transformOrigin:"center"},{opacity:1,scale:1,duration:.45,ease:"back.out(2)"},at)
+    .to("#callout",{opacity:0,duration:.4},at+dur-.4);
+}
+/* الحالات الابتدائية */
+gsap.set(".hw",{opacity:.28});
+gsap.set("#osCore",{opacity:.25,scale:.92,transformOrigin:"center"});
+gsap.set(".file-cell,.ram-fill,.b-win",{opacity:.12});
+gsap.set(".proc-chip",{opacity:0,x:760,y:250});
+gsap.set(".chk",{strokeDasharray:16,strokeDashoffset:16});
+gsap.set(".chk-row",{opacity:.25});
+gsap.set("#printPaper",{scaleY:.15,transformOrigin:"50% 0%"});
+gsap.set(".paper-line",{strokeDasharray:80,strokeDashoffset:80});
+gsap.set("#stageSvg",{scale:1,transformOrigin:"50% 50%"});
+function hi(tl,sel,at,dur){
+  tl.to(sel,{opacity:1,scale:1.04,transformOrigin:"center",duration:.5,ease:"back.out(1.6)"},at)
+    .to(sel,{scale:1,duration:.4},at+.5)
+    .to(sel,{opacity:.35,duration:.6},at+dur-.6);
+}
+function buildScene(i){
+  const s=SCENES[i], t=gsap.timeline({defaults:{ease:"power2.out"}}), D=s.dur;
+  if(i===0){
+    t.fromTo("#powerRing",{scale:.85,opacity:.5},{scale:1.12,opacity:1,duration:.8,yoyo:true,repeat:3,transformOrigin:"center"},.3)
+     .to("#powerBtn",{scale:.9,duration:.18,transformOrigin:"center"},3.6).to("#powerBtn",{scale:1,duration:.25},3.8)
+     .call(()=>{$("#bigTitle h2").textContent="كيف يعمل نظام التشغيل؟";$("#bigTitle p").textContent="من زرّ التشغيل… إلى ورقة تخرج من الطابعة 🖨️"},null,.2)
+     .to("#darkVeil",{opacity:.12,duration:1.6},3.9).to("#powerBtn",{opacity:0,duration:.6},4.1)
+     .to(".b-win",{opacity:1,duration:.35,stagger:.16},4.4)
+     .to("#city",{opacity:.9,duration:1},4.4)
+     .fromTo("#bigTitle",{opacity:0,y:26},{opacity:1,y:0,duration:.9},4.9)
+     .to(".hw",{opacity:.5,duration:.8,stagger:.12},5.4)
+     .to("#bigTitle",{opacity:0,y:-16,duration:.7},D-1.1);
+  }
+  if(i===1){
+    t.to("#darkVeil",{opacity:0,duration:.5},0)
+     .fromTo("#bootPanel",{opacity:0,y:-18},{opacity:1,y:0,duration:.6},.3);
+    $$(".chk-row").forEach((r,k)=>{const at=1+k*2.2;
+      t.to(r,{opacity:1,duration:.3},at).to(r.querySelector(".chk"),{strokeDashoffset:0,duration:.55,ease:"power2.out"},at+.35)
+       .fromTo(r,{scale:1},{scale:1.04,transformOrigin:"0 50%",duration:.16,yoyo:true,repeat:1},at+.9);});
+    hi(t,"#hw-cpu",1,2.4); hi(t,"#hw-ram",3.2,2.4); hi(t,"#hw-ssd",5.4,2.6);
+    flow(t,"#road-cpu","#38bdf8",2,2.2,1.2); flow(t,"#road-ram","#22d3ee",2,2.2,3.4); flow(t,"#road-ssd","#a78bfa",2,2.2,5.6);
+    t.to("#bootPanel",{opacity:0,y:-14,duration:.6},D-.8);
+  }
+  if(i===2){
+    hi(t,"#hw-ssd",.2,3);
+    t.fromTo("#kernelBar",{opacity:0,y:14},{opacity:1,y:0,duration:.5},.4)
+     .fromTo("#kernelFill",{attr:{width:0}},{attr:{width:290},duration:5.5,ease:"power1.inOut"},.8);
+    flow(t,"#road-ssd","#fbbf24",5,2,s.dur,0.7,1,0);
+    flow(t,"#road-ram","#fbbf24",4,2,s.dur,1.2);
+    t.to("#osCore",{opacity:1,scale:1,duration:.9,ease:"back.out(1.8)"},6.4)
+     .fromTo("#hubRing",{scale:.8,opacity:0},{scale:1.25,opacity:.9,duration:1.1,yoyo:true,repeat:2,transformOrigin:"center"},6.6)
+     .to("#hw-ram",{opacity:1,duration:.5},6.8).to("#kernelBar",{opacity:0,duration:.5},D-1);
+  }
+  if(i===3){
+    t.to(["#hw-ram","#hw-ssd","#hw-cpu","#hw-gpu","#hw-printer","#hw-user"],{opacity:.85,duration:.8,stagger:.1},.2)
+     .to("#officerArm",{rotation:22,transformOrigin:"15px -10px",duration:.6,yoyo:true,repeat:3,ease:"sine.inOut"},.6);
+    const tlSeq=[[ "#tlRed",1],["#tlYellow",0],["#tlGreen",1]];
+    t.to("#tlRed",{opacity:.25,duration:.3},.4).to("#tlGreen",{opacity:1,duration:.3,filter:"url(#glow)"},.5);
+    flow(t,"#road-ram","#22d3ee",3,3,1); flow(t,"#road-cpu","#38bdf8",3,3,2.2);
+    t.to("#tlGreen",{opacity:.25,duration:.3},5.4).to("#tlRed",{opacity:1,duration:.3},5.5)
+     .to("#tlRed",{opacity:.25,duration:.3},8.6).to("#tlGreen",{opacity:1,duration:.3},8.7);
+    flow(t,"#road-gpu","#f472b6",3,3,6); flow(t,"#road-user","#fbbf24",3,3,7);
+    flow(t,"#road-printer","#34d399",2,3,9.5); flow(t,"#road-ssd","#a78bfa",2,3,10.5);
+  }
+  if(i===4){
+    hi(t,"#hw-cpu",.2,D-1);
+    const slots=[[770,268],[822,240],[874,214]];
+    $$(".proc-chip").forEach((c,k)=>t.set(c,{x:slots[k%3][0],y:slots[k%3][1],opacity:0}));
+    let cur=[...$$(".proc-chip")];
+    for(let round=0;round<3;round++){
+      const at=.8+round*3.4, chip=cur.shift();
+      t.to(chip,{opacity:1,duration:.3},at)
+       .to(chip,{x:972,y:172,scale:1.12,duration:.8,ease:"power2.inOut"},at+.2)
+       .fromTo("#cpuRing",{strokeDashoffset:119.4},{strokeDashoffset:0,duration:1,ease:"none"},at+1)
+       .to(chip,{x:800,y:300,scale:1,duration:.7,ease:"power2.inOut"},at+2.1);
+      cur.forEach((c2,k2)=>t.to(c2,{x:slots[k2][0],y:slots[k2][1],opacity:1,duration:.5},at+2.2));
+      cur.push(chip);
+    }
+    t.to(".proc-chip",{opacity:0,duration:.5},D-.7);
+  }
+  if(i===5){
+    hi(t,"#hw-ram",.2,D-1);
+    t.fromTo(".ram-fill",{opacity:.12,scale:.6,transformOrigin:"center"},{opacity:1,scale:1,duration:.5,stagger:.7,ease:"back.out(2)"},.6)
+     .to(".ram-fill",{opacity:.12,scale:.7,duration:.45,stagger:{each:.35,from:"random"}},5.2)
+     .fromTo(".ram-fill",{opacity:.12},{opacity:1,duration:.4,stagger:.45},7.4)
+     .fromTo("#ramWarn",{opacity:0},{opacity:1,duration:.35,yoyo:true,repeat:3},10.6)
+     .fromTo("#hw-ram",{x:0},{x:5,duration:.07,yoyo:true,repeat:5},10.6)
+     .to(".ram-fill",{opacity:.15,duration:.4,stagger:.2},12.2).to("#ramWarn",{opacity:0,duration:.4},12.4);
+    flow(t,"#road-ram","#f472b6",4,2.4,1);
+  }
+  if(i===6){
+    hi(t,"#hw-ssd",.2,4.5);
+    t.fromTo(".file-cell",{opacity:.12,scale:.5,transformOrigin:"center"},{opacity:1,scale:1,duration:.4,stagger:.28,ease:"back.out(2.2)"},.5);
+    hi(t,"#hw-gpu",5,D-5.5);
+    t.set("#drvMsg",{x:640,y:360,opacity:0})
+     .to("#drvMsg",{opacity:1,duration:.3},5.2)
+     .to("#drvMsg",{x:872,y:360,duration:1.1,ease:"power1.inOut"},5.4)
+     .to("#driverNode",{scale:1.18,transformOrigin:"center",duration:.25,yoyo:true,repeat:1},6.5)
+     .to("#drvMsg",{attr:{fill:"#f472b6"},duration:.3},6.6)
+     .to("#drvMsg",{x:1040,y:360,duration:1.1,ease:"power1.inOut"},6.9)
+     .to("#drvMsg",{opacity:0,duration:.3},8)
+     .fromTo("#gpuScreen",{attr:{fill:"#082f3a"}},{attr:{fill:"#155e75"},duration:.6},8)
+     .fromTo("#gpuChart",{opacity:0,y:8},{opacity:1,y:0,duration:.6},8.2)
+     .to("#gpuChart",{opacity:0,duration:.5},D-.8);
+    flow(t,"#road-ssd","#fbbf24",3,2.2,1.5); flow(t,"#road-gpu","#f472b6",2,2.2,8.2);
+  }
+  if(i===7){
+    hi(t,"#hw-user",.2,4);
+    t.fromTo("#clickRipple",{opacity:0,scale:.4,transformOrigin:"center"},{opacity:1,scale:1,duration:.3},1)
+     .to("#clickRipple",{scale:2.6,opacity:0,duration:.8},1.3)
+     .fromTo("#printBtn",{scale:1},{scale:.92,transformOrigin:"center",duration:.15,yoyo:true,repeat:1},1);
+    t.set("#docFly",{x:300,y:600,opacity:0,rotation:-6})
+     .to("#docFly",{opacity:1,duration:.4},1.6);
+    if(window.MotionPathPlugin){
+      t.to("#docFly",{motionPath:{path:"#road-user",start:1,end:0,align:"#road-user",alignOrigin:[.5,.5]},duration:2.6,ease:"power1.inOut"},1.8);
+    }else t.to("#docFly",{x:640,y:360,duration:2.6,ease:"power1.inOut"},1.8);
+    t.to("#osCore",{scale:1.06,transformOrigin:"center",duration:.3,yoyo:true,repeat:1},4.5)
+     .to("#docFly",{x:905,y:520,rotation:8,duration:1.6,ease:"power1.inOut"},5)
+     .call(()=>{$("#spoolCount").textContent="طابور: 3"},null,5.1)
+     .fromTo(".spool-dot",{opacity:.15},{opacity:1,duration:.3,stagger:.5},5.2)
+     .call(()=>{$("#spoolCount").textContent="طابور: 2"},null,7.2)
+     .call(()=>{$("#spoolCount").textContent="طابور: 1"},null,8.6)
+     .call(()=>{$("#spoolCount").textContent="طابور: 0"},null,10)
+     .to(".spool-dot",{opacity:.15,duration:.4,stagger:.4},7.2);
+    if(window.MotionPathPlugin){
+      t.to("#docFly",{motionPath:{path:"#road-printer",start:0,end:1,align:"#road-printer",alignOrigin:[.5,.5]},duration:2.2,ease:"power1.inOut"},10.1);
+    }else t.to("#docFly",{x:992,y:592,duration:2.2,ease:"power1.inOut"},10.1);
+    t.to("#docFly",{opacity:0,scale:.6,duration:.4},12.3)
+     .fromTo("#printPaper",{scaleY:.15},{scaleY:1,duration:1.6,ease:"power2.out"},12.5)
+     .to(".paper-line",{strokeDashoffset:0,duration:.7,stagger:.35},12.9)
+     .fromTo("#printDone",{opacity:0,scale:.7,transformOrigin:"center"},{opacity:1,scale:1,duration:.55,ease:"back.out(2.4)"},14.6)
+     .to("#printDone",{opacity:0,duration:.5},D-.6);
+  }
+  if(i===8){
+    t.to("#stageSvg",{scale:1.18,duration:3.2,ease:"power1.inOut"},0)
+     .to(".hw",{opacity:1,duration:.6,stagger:.08},.4)
+     .to("#stageSvg",{scale:1,duration:3,ease:"power1.inOut"},3.4)
+     .fromTo("#hubRing2",{rotation:0},{rotation:360,transformOrigin:"center",duration:6,ease:"none"},.4);
+    flow(t,"#road-ram","#22d3ee",2,3,1); flow(t,"#road-cpu","#38bdf8",2,3,1.6);
+    flow(t,"#road-gpu","#f472b6",2,3,2.2); flow(t,"#road-printer","#34d399",2,3,2.8);
+    t.call(()=>{$("#bigTitle h2").textContent="نظام التشغيل: البطل الخفي";$("#bigTitle p").textContent="يدير كل مورد… كل ثانية — شكرًا للمشاهدة"},null,6.1)
+     .fromTo("#bigTitle",{opacity:0,y:20},{opacity:1,y:0,duration:.8},6.2)
+     .to("#bigTitle",{opacity:0,duration:.8},D-1);
+  }
+  callout(t,s.calloutX??640,s.calloutY??212,s.callout,.5,Math.min(D-1.4,6.5));
+  return t;
+}
+/* ============ الخط الزمني الرئيسي ============ */
+let currentScene=-1;
+const masterTl=gsap.timeline({paused:true,onUpdate:syncUI,onComplete:()=>setPlayUI(false)});
+SCENES.forEach((s,i)=>{
+  masterTl.addLabel("s"+i,s.start);
+  masterTl.call(activateScene,[i],s.start);
+  masterTl.add(buildScene(i),s.start);
+});
+masterTl.to({},{duration:.1},TOTAL-.05);
+gsap.to("#hubRing2",{rotation:360,transformOrigin:"center",duration:40,ease:"none",repeat:-1});
+function activateScene(i){
+  currentScene=i; const s=SCENES[i];
+  $("#subText").textContent=s.vo;
+  $("#subScene").textContent="المشهد "+s.id+" — "+s.title;
+  $("#sceneChip").textContent="المشهد "+s.id+" من "+SCENES.length;
+  $("#sceneName").textContent=s.title;
+  $$(".scene-card").forEach((c,k)=>c.classList.toggle("active",k===i));
+  $$("#syncBody tr").forEach((r,k)=>r.classList.toggle("hl",k===i));
+  const card=$$(".scene-card")[i]; if(card) card.scrollIntoView({block:"nearest",behavior:"smooth"});
+  gsap.fromTo(".subtitle span",{y:12,opacity:.4},{y:0,opacity:1,duration:.5,ease:"power2.out"});
+  if(ttsOn && !audioReady && masterTl.isActive()) speak(s.vo);
+}
+/* ============ النطق الآلي ============ */
+let ttsOn=false;
+function speak(text){
+  if(!("speechSynthesis" in window)) return;
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text); u.lang="ar-SA"; u.rate=.96;
+  const v=speechSynthesis.getVoices().find(v=>v.lang&&v.lang.startsWith("ar")); if(v) u.voice=v;
+  speechSynthesis.speak(u);
+}
+/* ============ الصوت والمزامنة ============ */
+const audio=$("#voAudio"); let audioReady=false, stretch=1, audioSrcKind="";
+function setStatus(msg,bad=false){const el=$("#audioStatus"); el.textContent=msg; el.classList.toggle("bad",bad)}
+function applyFit(){
+  if(audioReady && isFinite(audio.duration) && audio.duration>5 && $("#autoFit").checked){
+    stretch=TOTAL/audio.duration; masterTl.timeScale(parseFloat($("#speed").value)*stretch);
+    setStatus("الحالة: صوت مربوط ("+audioSrcKind+") — مدة الصوت "+fmt(audio.duration)+"، ضُبطت سرعة الحركة تلقائيًا ×"+stretch.toFixed(2)+" لتطابق التسجيل.");
+  }else if(audioReady){ stretch=1; masterTl.timeScale(parseFloat($("#speed").value));
+    setStatus("الحالة: صوت مربوط ("+audioSrcKind+") — المزامنة التلقائية متوقفة، تأكد أن مدد المشاهد تطابق التسجيل."); }
+}
+audio.addEventListener("loadedmetadata",()=>{audioReady=true; applyFit(); syncAudio(true)});
+audio.addEventListener("error",()=>{ if(!audio.getAttribute("src"))return; audioReady=false;
+  setStatus("تعذّر تحميل الصوت من هذا المصدر (غالبًا قيود Google Drive على البث المباشر). الحل: نزّل الملف من Drive ثم ارفعه بزر «رفع ملف الصوت»، أو فعّل النطق الآلي.",true); },true);
+audio.addEventListener("ended",()=>{ if(masterTl.progress()<1){masterTl.pause(); setPlayUI(false);} });
+$("#audioFile").addEventListener("change",e=>{
+  const f=e.target.files[0]; if(!f) return;
+  audio.src=URL.createObjectURL(f); audioSrcKind="ملف مرفوع: "+f.name; audio.load();
+  $("#modeChip").textContent="الوضع: صوت مرفوع محليًا";
+  setStatus("تم استلام الملف «"+f.name+"» — اضغط تشغيل وستتحرك الرسوم متزامنة معه.");
+});
+$("#driveTry").addEventListener("click",()=>{
+  audio.src="https://drive.google.com/uc?export=download&id=1CUJUwfFRXAkVEwi-LQWM04lvAfAiufSv";
+  audioSrcKind="Google Drive"; audio.load();
+  $("#modeChip").textContent="الوضع: محاولة بث من Drive";
+  setStatus("جارٍ محاولة الاتصال بـ Google Drive… إن لم يبدأ الصوت خلال ثوانٍ، فالسبب قيود Drive — نزّل الملف وارفعه محليًا.");
+  playAll();
+});
+$("#autoFit").addEventListener("change",applyFit);
+$("#ttsMode").addEventListener("change",e=>{ ttsOn=e.target.checked;
+  if(ttsOn){ if(audioReady){audio.pause(); audioReady=false;} $("#modeChip").textContent="الوضع: نطق آلي عربي";
+    setStatus("النطق الآلي مفعّل: سيقرأ المتصفح نص كل مشهد عند بدايته. اضغط «تشغيل». جرّب متصفح Chrome/Edge لأفضل صوت عربي."); }
+  else{ speechSynthesis&&speechSynthesis.cancel(); $("#modeChip").textContent=audioReady?"الوضع: صوت مربوط":"الوضع: تشغيل زمني (بدون صوت)"; }
+});
+function syncAudio(force=false){
+  if(!audioReady) return;
+  const target=masterTl.time()/stretch;
+  if(force || Math.abs(audio.currentTime-target)>.4){ try{audio.currentTime=target}catch(e){} }
+}
+setInterval(()=>{ if(audioReady && !audio.paused && masterTl.isActive()) syncAudio(); },1200);
+/* ============ التحكم ============ */
+const playBtn=$("#playBtn");
+function setPlayUI(playing){ playBtn.textContent=playing?"⏸ إيقاف مؤقت":"▶ تشغيل"; }
+function playAll(){
+  if(masterTl.progress()>=1) masterTl.restart();
+  masterTl.play(); setPlayUI(true);
+  if(audioReady){ syncAudio(true); audio.play().catch(()=>setStatus("المتصفح منع التشغيل التلقائي للصوت — اضغط زر التشغيل في مشغّل الصوت بالأسفل ثم زر «تشغيل» هنا.",true)); }
+  if(ttsOn && currentScene>=0) speak(SCENES[currentScene].vo);
+}
+function pauseAll(){ masterTl.pause(); setPlayUI(false); if(audioReady) audio.pause(); if(window.speechSynthesis) speechSynthesis.cancel(); }
+playBtn.onclick=()=> masterTl.isActive()?pauseAll():playAll();
+$("#restartBtn").onclick=()=>{ masterTl.pause(0); if(audioReady){audio.currentTime=0} if(window.speechSynthesis) speechSynthesis.cancel(); currentScene=-1; activateScene(0); playAll(); };
+function seekScene(i){ masterTl.pause(SCENES[i].start+.05); activateScene(i); if(audioReady) syncAudio(true); if(window.speechSynthesis) speechSynthesis.cancel(); setPlayUI(false); }
+$("#prevBtn").onclick=()=>seekScene(Math.max(0,(currentScene<0?0:currentScene)-1));
+$("#nextBtn").onclick=()=>seekScene(Math.min(SCENES.length-1,(currentScene<0?0:currentScene)+1));
+$("#speed").onchange=e=>{ const v=parseFloat(e.target.value); masterTl.timeScale(v*(audioReady&&$("#autoFit").checked?stretch:1));
+  if(audioReady) audio.playbackRate=1; };
+$("#scrub").addEventListener("input",e=>{ const t=parseFloat(e.target.value); masterTl.pause(t);
+  const idx=SCENES.findIndex(s=>t>=s.start && t<s.start+s.dur); if(idx>=0 && idx!==currentScene) activateScene(idx);
+  if(audioReady) syncAudio(true); if(window.speechSynthesis) speechSynthesis.cancel(); setPlayUI(false); syncUI(); });
+function syncUI(){ $("#scrub").value=masterTl.time(); $("#tNow").textContent=fmt(masterTl.time()); }
+document.addEventListener("keydown",e=>{
+  if(e.code==="Space" && !/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)){ e.preventDefault(); masterTl.isActive()?pauseAll():playAll(); }
+  if(e.key==="ArrowLeft") $("#nextBtn").click(); if(e.key==="ArrowRight") $("#prevBtn").click();
+});
+activateScene(0); syncUI();
+if(window.speechSynthesis) speechSynthesis.getVoices();
+
+
+
+
+</script>
+
+
+
+</body>
+</html>
