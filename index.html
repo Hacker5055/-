@@ -80,6 +80,21 @@ tr.hl td{background:rgba(14,116,144,.22)}
 .notes{padding:16px 20px}.notes li{color:#cbd5e1;line-height:2;font-size:13.5px}
 code{background:#0b1e3d;border:1px solid var(--line);padding:1px 7px;border-radius:7px;color:#7dd3fc;font-size:12px;direction:ltr;unicode-bidi:embed}
 .err{display:none;margin:14px 20px;padding:12px 16px;border-radius:12px;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.5);font-weight:700}
+/* ===== وضع التصوير النظيف + التسجيل ===== */
+body.cinema{background:#000}
+body.cinema .topbar,body.cinema .side,body.cinema .below,body.cinema footer,
+body.cinema .stage-head,body.cinema .transport,body.cinema .lab,body.cinema .err{display:none!important}
+body.cinema .layout{display:block;padding:0;max-width:none}
+body.cinema .card{border:none;border-radius:0;background:#000}
+body.cinema .stage{width:100vw}
+.fs-exit{position:absolute;top:12px;inset-inline-start:12px;z-index:30;display:none;
+  background:rgba(2,6,17,.75);color:#fff;border:1px solid var(--line);border-radius:99px;
+  padding:7px 14px;font-family:inherit;font-weight:800;font-size:12px;cursor:pointer}
+body.cinema .fs-exit{display:block}
+#countdown{position:absolute;inset:0;display:none;place-items:center;z-index:25;pointer-events:none;
+  font-size:110px;font-weight:900;color:#fff;text-shadow:0 0 60px rgba(34,211,238,.8)}
+.btn.rec-live{background:#7f1d1d!important;border-color:#f87171!important;animation:recPulse 1s infinite}
+@keyframes recPulse{50%{box-shadow:0 0 22px rgba(248,113,113,.75)}}
 footer{color:var(--muted);font-size:12px;text-align:center;padding:0 20px 26px;line-height:2}
 </style>
 </head>
@@ -95,7 +110,9 @@ footer{color:var(--muted);font-size:12px;text-align:center;padding:0 20px 26px;l
 <main class="card">
 <div class="stage-head"><b>🎬 مسرح الموشن جرافيك</b><span class="chip" id="sceneChip">المشهد 1 من 9</span>
 <span class="chip violet" id="sceneName">الافتتاحية</span><span class="chip" id="modeChip">الوضع: تشغيل زمني (بدون صوت)</span></div>
-<div class="stage">
+<div class="stage" id="stageBox">
+<button class="fs-exit" id="exitCinema">✕ خروج من وضع التصوير (Esc)</button>
+<div id="countdown"></div>
 <svg id="stageSvg" viewBox="0 0 1280 720" role="img" aria-label="مسرح متحرك يشرح عمل نظام التشغيل">
 <defs>
 <radialGradient id="bgGrad" cx="50%" cy="38%" r="80%">
@@ -271,6 +288,8 @@ footer{color:var(--muted);font-size:12px;text-align:center;padding:0 20px 26px;l
 <div class="scrub-wrap"><input type="range" id="scrub" min="0" max="114" step="0.05" value="0" aria-label="شريط التقدم"><div class="markers" id="markers"></div></div>
 <div class="time"><span id="tNow">0:00</span> / <span id="tTotal">1:54</span></div>
 <select class="btn" id="speed" title="سرعة التشغيل"><option value="0.5">0.5×</option><option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option><option value="2">2×</option></select>
+<button class="btn" id="cinemaBtn" title="إظهار المسرح فقط بملء الشاشة — للتصوير النظيف">🖥 وضع التصوير النظيف</button>
+<button class="btn warn" id="recBtn" title="تسجيل الشاشة وتنزيل الفيديو">🎥 تسجيل وتصدير فيديو</button>
 </div>
 <div class="lab">
 <h3>🔊 مختبر الصوت والمزامنة</h3>
@@ -284,6 +303,8 @@ footer{color:var(--muted);font-size:12px;text-align:center;padding:0 20px 26px;l
 </div>
 <audio id="voAudio" controls preload="metadata"></audio>
 <div class="status" id="audioStatus">الحالة: وضع التشغيل الزمني الصامت — اضغط «تشغيل» لبدء العرض مع التعليقات النصية.</div>
+<h3>🎥 عايز الفيديو MP4 للمونتاج؟</h3>
+<p style="text-align:right">١) اضغط <b>«وضع التصوير النظيف»</b> فيختفي كل شيء إلا المسرح. ٢) اضغط <b>«تسجيل وتصدير فيديو»</b> واختار <b>نافذة/تبويب المتصفح دي</b> وفعّل «مشاركة صوت التبويب» لو فيه تعليق صوتي شغال. ٣) هيعدّ ٣-٢-١ ويبدأ العرض والتسجيل مع بعض، وفي النهاية هينزّل الفيديو تلقائيًا (MP4 لو متصفحك بيدعمه، وإلا WebM وتحوّله بخطوة واحدة — الشرح تحت الفيديو). ملحوظة: التسجيل من المتصفح بيشتغل على رابط المعاينة (HTTPS) أو localhost، مش من فتح الملف مباشرة.</p>
 </div>
 
 </main>
@@ -629,6 +650,58 @@ document.addEventListener("keydown",e=>{
   if(e.code==="Space" && !/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)){ e.preventDefault(); masterTl.isActive()?pauseAll():playAll(); }
   if(e.key==="ArrowLeft") $("#nextBtn").click(); if(e.key==="ArrowRight") $("#prevBtn").click();
 });
+/* ============ وضع التصوير النظيف ============ */
+$("#cinemaBtn").onclick=()=>{
+  document.body.classList.add("cinema");
+  const box=$("#stageBox");
+  if(box.requestFullscreen) box.requestFullscreen().catch(()=>{});
+  setStatus("وضع التصوير مفعّل: المسرح بس اللي ظاهر. اضغط «تسجيل وتصدير فيديو» واختار التبويب ده، أو سجّل بـ OBS. للخروج: Esc ثم زر الخروج.");
+};
+function exitCinema(){ document.body.classList.remove("cinema"); if(document.fullscreenElement) document.exitFullscreen().catch(()=>{}); }
+$("#exitCinema").onclick=exitCinema;
+document.addEventListener("fullscreenchange",()=>{ if(!document.fullscreenElement) document.body.classList.remove("cinema"); });
+/* ============ تسجيل الفيديو وتصديره ============ */
+let mediaRecorder=null, recChunks=[], recStream=null, recMime="", isRecording=false;
+const recBtn=$("#recBtn");
+function setRecUI(){ recBtn.textContent=isRecording?"⏹ إيقاف التسجيل وتنزيل الفيديو":"🎥 تسجيل وتصدير فيديو"; recBtn.classList.toggle("rec-live",isRecording); }
+async function startRecording(){
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia || !window.MediaRecorder){
+    setStatus("متصفحك لا يدعم التسجيل من الصفحة. الحل البديل: سجّل الشاشة ببرنامج OBS المجاني (الخطوات في ردّ المحادثة)، أو افتح الصفحة من رابط المعاينة في Chrome/Edge.",true); return;
+  }
+  try{
+    recStream=await navigator.mediaDevices.getDisplayMedia({video:{frameRate:30},audio:true,preferCurrentTab:true});
+  }catch(e){ setStatus("اتلغي اختيار الشاشة — اضغط «تسجيل» واختار تبويب المتصفح وفعّل مشاركة الصوت.",true); return; }
+  const types=['video/mp4;codecs="avc1.640028,mp4a.40.2"','video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
+  recMime=types.find(t=>MediaRecorder.isTypeSupported(t))||"";
+  recChunks=[];
+  mediaRecorder=new MediaRecorder(recStream, recMime?{mimeType:recMime,videoBitsPerSecond:16000000,audioBitsPerSecond:192000}:undefined);
+  mediaRecorder.ondataavailable=e=>{ if(e.data && e.data.size) recChunks.push(e.data); };
+  mediaRecorder.onstop=downloadRecording;
+  recStream.getVideoTracks()[0].addEventListener("ended",()=>{ if(isRecording) stopRecording(); });
+  mediaRecorder.start(250); isRecording=true; setRecUI();
+  setStatus("🔴 جارٍ التسجيل… هيبدأ العرض من الأول بعد العدّ التنازلي. متحرّكش الماوس فوق المسرح.");
+  /* عدّ تنازلي ٣-٢-١ ثم إعادة التشغيل من الصفر */
+  pauseAll(); masterTl.pause(0); activateScene(0);
+  const cd=$("#countdown"); cd.style.display="grid";
+  for(const n of [3,2,1]){ cd.textContent=n; await new Promise(r=>setTimeout(r,800)); }
+  cd.style.display="none"; cd.textContent="";
+  playAll();
+}
+function stopRecording(){ if(mediaRecorder && mediaRecorder.state!=="inactive") mediaRecorder.stop(); if(recStream) recStream.getTracks().forEach(t=>t.stop()); }
+function downloadRecording(){
+  isRecording=false; setRecUI();
+  if(!recChunks.length){ setStatus("التسجيل وقف من غير بيانات — جرّب تاني واختار «تبويب المتصفح» بالكامل.",true); return; }
+  const type=recMime||"video/webm", ext=type.includes("mp4")?"mp4":"webm";
+  const blob=new Blob(recChunks,{type:type.split(";")[0]});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download="os-motion-graphics."+ext; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  setStatus(ext==="mp4"
+    ? "✅ نزل الفيديو بصيغة MP4 جاهز للمونتاج مباشرة في Premiere / CapCut / DaVinci."
+    : "✅ نزل الفيديو بصيغة WebM. لو برنامج المونتاج مش بيقبله: حوّله لـ MP4 ببرنامج HandBrake المجاني أو موقع CloudConvert أو أمر FFmpeg (الشرح في ردّ المحادثة).");
+}
+recBtn.onclick=()=>{ isRecording?stopRecording():startRecording(); };
+setInterval(()=>{ if(isRecording && masterTl.progress()>=1){ setTimeout(()=>{ if(isRecording) stopRecording(); },900); } },500);
 activateScene(0); syncUI();
 if(window.speechSynthesis) speechSynthesis.getVoices();
 
